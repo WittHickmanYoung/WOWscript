@@ -1,0 +1,183 @@
+function buyItem(i, callback)
+    if i <= 114 then
+        BuyMerchantItem(31, 1)
+        C_Timer.After(0.3, function()
+            print("Hello, World!")
+            buyItem(i + 1, callback)
+        end)
+    else
+        callback()
+    end
+end
+
+function sellItem(callback)
+    local itemID = 205918
+    local delay = 0.3
+    for bag = 0,4,1 do
+        for slot = 1, C_Container.GetContainerNumSlots(bag), 1 do
+            if C_Container.GetContainerItemID(bag, slot) == itemID then
+                C_Timer.After(delay, function()
+                    C_Container.UseContainerItem(bag,slot)
+                end)
+                delay = delay + 0.3
+            end
+        end
+    end
+    C_Timer.After(delay, callback)
+end
+
+function BuySellItem()
+    buyItem(1, function()
+        sellItem(function()
+            print("Done")
+        end)
+    end)
+end
+
+
+-- function buyItem(i, callback)
+--     if i <= 114 then
+--         BuyMerchantItem(31, 1)
+--         C_Timer.After(0.3, function()
+--             print("Hello, World!")
+--             buyItem(i + 1, callback)
+--         end)
+--     else
+--         callback()
+--     end
+-- end
+--
+--
+--
+-- if itemIndex then
+--     BuyMerchantItem(itemIndex, 1) -- Buy one of the item
+-- end
+function testSell()
+    local itemId = 205918 -- The item ID of the item you want to sell
+    local delay = 0.3 -- The delay in seconds between each call to C_Container.UseContainerItem
+    local count = 0
+    for bag = 0, NUM_BAG_SLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local id = C_Container.GetContainerItemID(bag, slot)
+            if id == itemId then
+                count = count + 1
+                C_Timer.After(delay * (count - 1), function()
+                    C_Container.UseContainerItem(bag, slot) -- Sell the item
+                end)
+            end
+        end
+    end
+end
+
+-- function test()
+--     --/dump GetItemInfo(4306)
+--     --/dump GetMerchantItemInfo(31)
+--     local itemId = 205918 -- The item ID of the item you want to buy
+--     local delay = 0.3 -- The delay in seconds between each call to BuyMerchantItem
+--     local times = 120
+--     local itemIndex
+--     for i = 1, GetMerchantNumItems() do
+--         local link = GetMerchantItemLink(i)
+--         if link then
+--             local id = GetItemInfoInstant(link)
+--             if id == itemId then
+--                 itemIndex = i
+--                 break -- Exit the loop
+--             end
+--         end
+--     end
+--
+--     if itemIndex then
+--         for i = 1, times do -- Buy the item 150 times
+--             C_Timer.After(delay * (i - 1), function()
+--                 BuyMerchantItem(itemIndex, 1)
+--             end)
+--         end
+--     end
+--
+--     C_Timer.After(delay * times, testSell)
+-- end
+
+function BuyById(itemId, times, delay)
+    local itemIndex
+    for i = 1, GetMerchantNumItems() do
+        local link = GetMerchantItemLink(i)
+        if link then
+            local id = GetItemInfoInstant(link)
+            if id == itemId then
+                itemIndex = i
+                break -- Exit the loop
+            end
+        end
+    end
+
+    if itemIndex then
+--         for i = 0, times - 1 do -- Buy the item 150 times
+--             C_Timer.After(delay * i, function()
+--                 BuyMerchantItem(itemIndex, 1)
+--             end)
+--         end
+        C_Timer.NewTicker(delay, function()
+            BuyMerchantItem(itemIndex, 1)
+        end, times)
+    end
+end
+
+function SellById(itemId, delay)
+    local count = 0
+    for bag = 0, NUM_BAG_SLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local id = C_Container.GetContainerItemID(bag, slot)
+            if id == itemId then
+                count = count + 1
+                C_Timer.After(delay * (count - 1), function()
+                    C_Container.UseContainerItem(bag, slot) -- Sell the item
+                end)
+            end
+        end
+    end
+end
+
+function BuySellById(itemId, times, delay)
+    --/dump GetItemInfo(4306)
+    --/dump GetMerchantItemInfo(31)
+    -- local itemId = 205918 -- The item ID of the item you want to buy
+    -- local delay = 0.25 -- The delay in seconds between each call to BuyMerchantItem
+    -- local times = 120
+--     local itemIndex
+--     for i = 1, GetMerchantNumItems() do
+--         local link = GetMerchantItemLink(i)
+--         if link then
+--             local id = GetItemInfoInstant(link)
+--             if id == itemId then
+--                 itemIndex = i
+--                 break -- Exit the loop
+--             end
+--         end
+--     end
+--
+--     if itemIndex then
+--         for i = 0, times - 1 do -- Buy the item 150 times
+--             C_Timer.After(delay * i, function()
+--                 BuyMerchantItem(itemIndex, 1)
+--             end)
+--         end
+--     end
+
+    BuyById(itemId, times, delay)
+
+    C_Timer.After(delay * times + 5, function()
+        SellById(itemId, delay)
+    end)
+end
+
+function test()
+    print("test BuySellById ")
+    -- /run BuyById(205918, 10, 0.25)
+    -- /run SellById(205918, 0.25)
+    for i = 0, 2000 do
+        C_Timer.After(i * 80, function()
+            BuySellById(205918, 120, 0.3)
+        end)
+    end
+end
